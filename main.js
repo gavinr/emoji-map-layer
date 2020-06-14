@@ -7,7 +7,7 @@ const createMap = async (element) => {
   // More info on esri-loader's loadModules function:
   // https://github.com/Esri/esri-loader#loading-modules-from-the-arcgis-api-for-javascript
   const [
-    Map,
+    WebMap,
     MapView,
     BaseLayerView2D,
     GraphicsLayer,
@@ -15,7 +15,7 @@ const createMap = async (element) => {
     webMercatorUtils,
   ] = await loadModules(
     [
-      "esri/Map",
+      "esri/WebMap",
       "esri/views/MapView",
       "esri/views/2d/layers/BaseLayerView2D",
       "esri/layers/GraphicsLayer",
@@ -58,19 +58,32 @@ const createMap = async (element) => {
     graphics: initialGraphics,
   });
 
-  const map = new Map({
-    basemap: "streets-vector",
-    layers: [emojiLayer],
+  const LAYER_IDS = ["172aef2c8db-layer-0"];
+  const map = new WebMap({
+    portalItem: {
+      // autocasts as new PortalItem()
+      id: "72f2f3b923cd446ab31d398950adc4e9",
+    },
   });
 
-  const viewOptions = {
+  const view = new MapView({
     container: childElement,
     map: map,
-    center: [0, 0],
-    zoom: 2,
-  };
+  });
 
-  new MapView(viewOptions);
+  view.when(() => {
+    // const layers = map.layers.toArray().filter((layer) => {
+    //   return layer && LAYER_IDS.indexOf(layer.id) > -1;
+    // });
+
+    map.layers.toArray().forEach((layer) => {
+      if (layer && LAYER_IDS.indexOf(layer.id) > -1) {
+        console.log("layer to work on:", layer);
+      }
+      // I don't think I can just swap the LayerView on this layer, so I
+      // need to grab the Features (Graphics) and remove the layer and re-add it.
+    });
+  });
 };
 
 window.addEventListener(
