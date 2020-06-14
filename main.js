@@ -7,81 +7,72 @@ const createMap = async (element) => {
   // More info on esri-loader's loadModules function:
   // https://github.com/Esri/esri-loader#loading-modules-from-the-arcgis-api-for-javascript
   const [
-    WebMap,
+    Map,
     MapView,
+    FeatureLayer,
     BaseLayerView2D,
     GraphicsLayer,
     Graphic,
     webMercatorUtils,
+    Multipoint,
   ] = await loadModules(
     [
-      "esri/WebMap",
+      "esri/Map",
       "esri/views/MapView",
+      "esri/layers/FeatureLayer",
       "esri/views/2d/layers/BaseLayerView2D",
       "esri/layers/GraphicsLayer",
       "esri/Graphic",
       "esri/geometry/support/webMercatorUtils",
+      "esri/geometry/Multipoint",
     ],
     {
       css: true,
     }
   );
 
-  const initialGraphics = [
-    new Graphic({
-      geometry: webMercatorUtils.geographicToWebMercator({
-        type: "point",
-        longitude: -90.29452,
-        latitude: 38.639375,
-      }),
-      attributes: {
-        name: "Art Museum",
-      },
-    }),
-    new Graphic({
-      geometry: webMercatorUtils.geographicToWebMercator({
-        type: "point",
-        longitude: -90.1849,
-        latitude: 38.62463,
-      }),
-      attributes: {
-        name: "Gateway Arch",
-      },
-    }),
-  ];
+  const featureLayer = new FeatureLayer({
+    portalItem: {
+      // autocasts as new PortalItem()
+      id: "710323311863451b9aece9722f8c0ac0",
+    },
+    outFields: ["*"],
+    visible: false,
+  });
 
   const EmojiLayerConstructor = GetEmojiLayerConstructor(
     BaseLayerView2D,
     GraphicsLayer
   );
-  const emojiLayer = new EmojiLayerConstructor({
-    graphics: initialGraphics,
+
+  const map = new Map({
+    basemap: "streets-vector",
+    layers: [featureLayer],
   });
 
-  const LAYER_IDS = ["172aef2c8db-layer-0"];
-  const map = new WebMap({
-    portalItem: {
-      // autocasts as new PortalItem()
-      id: "72f2f3b923cd446ab31d398950adc4e9",
-    },
-  });
-
-  const view = new MapView({
+  const viewOptions = {
     container: childElement,
     map: map,
-  });
+    center: [0, 0],
+    zoom: 2,
+  };
 
+  const view = new MapView(viewOptions);
   view.when(() => {
-    // const layers = map.layers.toArray().filter((layer) => {
-    //   return layer && LAYER_IDS.indexOf(layer.id) > -1;
-    // });
-
-    map.layers.toArray().forEach((layer) => {
-      if (layer && LAYER_IDS.indexOf(layer.id) > -1) {
-        console.log("layer to work on:", layer);
-      }
-      // I don't think I can just swap the LayerView on this layer, so I
-      // need to grab the Features (Graphics) and remove the layer and re-add it.
+    featureLayer.when(() => {
+      const query = featureLayer.createQuery();
+      featureLayer.queryFeatures(query).then((results) => {
+        const emojiLayer = new EmojiLayerConstructor({
+          graphics: results.features,
+        });
+        map.add(emojiLayer);
+        const multiPoint = new Multipoint({
+          points: results.features.map((feature) => {
+            return [feature.geometry.longitude, feature.geometry.latitude];
+          }),
+        });
+        view.extent = multiPoint.extent.expand(1.5);
+      });
     });
   });
 };
