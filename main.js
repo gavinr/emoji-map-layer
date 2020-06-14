@@ -31,10 +31,21 @@ const createMap = async (element) => {
     }
   );
 
+  const urlParams = new URLSearchParams(window.location.search);
+  let layerPortalId = urlParams.get("layer");
+  let attribute = urlParams.get("attribute");
+
+  if (!layerPortalId) {
+    layerPortalId = "710323311863451b9aece9722f8c0ac0"; // default
+  }
+  if (!attribute) {
+    attribute = "emoji"; // default
+  }
+
   const featureLayer = new FeatureLayer({
     portalItem: {
       // autocasts as new PortalItem()
-      id: "710323311863451b9aece9722f8c0ac0",
+      id: layerPortalId,
     },
     outFields: ["*"],
     visible: false,
@@ -63,6 +74,7 @@ const createMap = async (element) => {
       const query = featureLayer.createQuery();
       featureLayer.queryFeatures(query).then((results) => {
         const emojiLayer = new EmojiLayerConstructor({
+          attribute,
           graphics: results.features,
         });
         map.add(emojiLayer);
@@ -81,7 +93,6 @@ window.addEventListener(
   "load",
   () => {
     const rootElement = document.body;
-    console.log("re", rootElement);
     createMap(rootElement);
   },
   false

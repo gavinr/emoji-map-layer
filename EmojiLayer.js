@@ -17,7 +17,7 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
       const ctx = renderParameters.context;
       // const canvas = ctx.canvas;
 
-      this.layer.graphics.forEach(function (graphic) {
+      this.layer.graphics.forEach((graphic) => {
         const mapCoords = [graphic.geometry.x, graphic.geometry.y];
         // console.log("mapCoords", mapCoords);
         // screenCoords array is modified in-place by state.toScreen()
@@ -28,11 +28,11 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
         // use these alignment properties for "better" positioning
         ctx.textAlign = "center";
         if (
-          graphic.attributes.hasOwnProperty("emoji") &&
-          emojiSymbols.hasOwnProperty(graphic.attributes.emoji)
+          graphic.attributes.hasOwnProperty(this.layer.attribute) &&
+          emojiSymbols.hasOwnProperty(graphic.attributes[this.layer.attribute])
         ) {
           ctx.fillText(
-            emojiSymbols[graphic.attributes.emoji].text,
+            emojiSymbols[graphic.attributes[this.layer.attribute]].text,
             screenCoords[0],
             screenCoords[1]
           );
@@ -48,7 +48,12 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
   // NOTE: by extending from the GraphicsLayer module instead of the Layer module,
   // we get built-in and familiar functionality for adding/removing graphics
   const CustomLayer = GraphicsLayer.createSubclass({
-    constructor: function (a) {
+    constructor: function (attrs) {
+      if (attrs.hasOwnProperty("attribute")) {
+        this.attribute = attrs.attribute;
+      } else {
+        this.attribute = "emoji";
+      }
       // we can establish default properties here for the layer
       // they can be changed when constructing an instance of the layer
       // this.outerRadius = 90;
