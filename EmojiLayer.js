@@ -19,7 +19,7 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
 
       this.layer.graphics.forEach(function (graphic) {
         const mapCoords = [graphic.geometry.x, graphic.geometry.y];
-        console.log("mapCoords", mapCoords);
+        // console.log("mapCoords", mapCoords);
         // screenCoords array is modified in-place by state.toScreen()
         const screenCoords = [0, 0];
         state.toScreen(screenCoords, mapCoords[0], mapCoords[1]);

@@ -9,58 +9,45 @@ const createMap = async (element) => {
   const [
     Map,
     MapView,
+    FeatureLayer,
     BaseLayerView2D,
     GraphicsLayer,
     Graphic,
     webMercatorUtils,
+    Multipoint,
   ] = await loadModules(
     [
       "esri/Map",
       "esri/views/MapView",
+      "esri/layers/FeatureLayer",
       "esri/views/2d/layers/BaseLayerView2D",
       "esri/layers/GraphicsLayer",
       "esri/Graphic",
       "esri/geometry/support/webMercatorUtils",
+      "esri/geometry/Multipoint",
     ],
     {
       css: true,
     }
   );
 
-  const initialGraphics = [
-    new Graphic({
-      geometry: webMercatorUtils.geographicToWebMercator({
-        type: "point",
-        longitude: -90.29452,
-        latitude: 38.639375,
-      }),
-      attributes: {
-        name: "Art Museum",
-      },
-    }),
-    new Graphic({
-      geometry: webMercatorUtils.geographicToWebMercator({
-        type: "point",
-        longitude: -90.1849,
-        latitude: 38.62463,
-      }),
-      attributes: {
-        name: "Gateway Arch",
-      },
-    }),
-  ];
+  const featureLayer = new FeatureLayer({
+    portalItem: {
+      // autocasts as new PortalItem()
+      id: "710323311863451b9aece9722f8c0ac0",
+    },
+    outFields: ["*"],
+    visible: false,
+  });
 
   const EmojiLayerConstructor = GetEmojiLayerConstructor(
     BaseLayerView2D,
     GraphicsLayer
   );
-  const emojiLayer = new EmojiLayerConstructor({
-    graphics: initialGraphics,
-  });
 
   const map = new Map({
     basemap: "streets-vector",
-    layers: [emojiLayer],
+    layers: [featureLayer],
   });
 
   const viewOptions = {
@@ -70,7 +57,24 @@ const createMap = async (element) => {
     zoom: 2,
   };
 
-  new MapView(viewOptions);
+  const view = new MapView(viewOptions);
+  view.when(() => {
+    featureLayer.when(() => {
+      const query = featureLayer.createQuery();
+      featureLayer.queryFeatures(query).then((results) => {
+        const emojiLayer = new EmojiLayerConstructor({
+          graphics: results.features,
+        });
+        map.add(emojiLayer);
+        const multiPoint = new Multipoint({
+          points: results.features.map((feature) => {
+            return [feature.geometry.longitude, feature.geometry.latitude];
+          }),
+        });
+        view.extent = multiPoint.extent.expand(1.5);
+      });
+    });
+  });
 };
 
 window.addEventListener(
