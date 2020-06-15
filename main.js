@@ -34,12 +34,16 @@ const createMap = async (element) => {
   const urlParams = new URLSearchParams(window.location.search);
   let layerPortalId = urlParams.get("layer");
   let attribute = urlParams.get("attribute");
+  let attributePrefix = urlParams.get("attribute_prefix");
 
   if (!layerPortalId) {
     layerPortalId = "710323311863451b9aece9722f8c0ac0"; // default
   }
   if (!attribute) {
     attribute = "emoji"; // default
+  }
+  if (!attributePrefix) {
+    attributePrefix = ""; // default
   }
 
   const featureLayer = new FeatureLayer({
@@ -57,7 +61,7 @@ const createMap = async (element) => {
   );
 
   const map = new Map({
-    basemap: "streets-vector",
+    basemap: "gray-vector",
     layers: [featureLayer],
   });
 
@@ -75,6 +79,7 @@ const createMap = async (element) => {
       featureLayer.queryFeatures(query).then((results) => {
         const emojiLayer = new EmojiLayerConstructor({
           attribute,
+          attributePrefix,
           graphics: results.features,
         });
         map.add(emojiLayer);

@@ -27,12 +27,14 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
         ctx.font = "40px serif";
         // use these alignment properties for "better" positioning
         ctx.textAlign = "center";
+
         if (graphic.attributes.hasOwnProperty(this.layer.attribute)) {
+          const replaceStr = `:${
+            this.layer.attributePrefix
+          }${graphic.attributes[this.layer.attribute].toLowerCase()}:`;
+
           ctx.fillText(
-            this.layer.emoji.replace_colons(
-              `:${graphic.attributes[this.layer.attribute]}:`
-            ),
-            // emojiSymbols[graphic.attributes[this.layer.attribute]].text,
+            this.layer.emoji.replace_colons(replaceStr),
             screenCoords[0],
             screenCoords[1]
           );
@@ -58,10 +60,12 @@ export default function EmojiLayer(BaseLayerView2D, GraphicsLayer) {
       } else {
         this.attribute = "emoji";
       }
-      // we can establish default properties here for the layer
-      // they can be changed when constructing an instance of the layer
-      // this.outerRadius = 90;
-      // this.innerRadius = 40;
+
+      if (attrs.hasOwnProperty("attributePrefix")) {
+        this.attributePrefix = attrs.attributePrefix;
+      } else {
+        this.attributePrefix = "";
+      }
     },
 
     createLayerView: function (view) {

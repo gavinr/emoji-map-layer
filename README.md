@@ -17,6 +17,7 @@ Show emoji on your ArcGIS map.
 
 - `layer` - ID of a Feature Layer from ArcGIS Online
 - `attribute` - attribute column of where to look for the emoji name
+- `attribute_prefix` - string that will be prepended to each attribute, main usage is `flag-`
 
 ## Examples
 
@@ -25,6 +26,7 @@ Show emoji on your ArcGIS map.
 ## Resources
 
 - Emoji name catalog: https://unicodey.com/emoji-data/table.htm
+- Flags (note about Windows 10): https://emojipedia.org/flags/
 
 ## Credit
 
