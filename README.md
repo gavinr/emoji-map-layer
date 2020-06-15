@@ -21,6 +21,7 @@ Show emoji on your ArcGIS map.
 
 ## Examples
 
+- https://gavinr.github.io/emoji-map-layer/?layer=782028ffbbfc47799f80e738f81c568d&attribute=ISO&attribute_prefix=flag-
 - https://gavinr.github.io/emoji-map-layer/?layer=710323311863451b9aece9722f8c0ac0&attribute=emoji
 
 ## Resources
