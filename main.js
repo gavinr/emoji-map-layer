@@ -15,6 +15,7 @@ const createMap = async (element) => {
     Graphic,
     webMercatorUtils,
     Multipoint,
+    PortalItem
   ] = await loadModules(
     [
       "esri/Map",
@@ -25,6 +26,7 @@ const createMap = async (element) => {
       "esri/Graphic",
       "esri/geometry/support/webMercatorUtils",
       "esri/geometry/Multipoint",
+      "esri/portal/PortalItem"
     ],
     {
       css: true,
@@ -46,23 +48,23 @@ const createMap = async (element) => {
     attributePrefix = ""; // default
   }
 
-  const featureLayer = new FeatureLayer({
-    portalItem: {
-      // autocasts as new PortalItem()
-      id: layerPortalId,
-    },
-    outFields: ["*"],
-    visible: false,
-  });
+  // const featureLayer = new FeatureLayer({
+  //   portalItem: {
+  //     // autocasts as new PortalItem()
+  //     id: layerPortalId,
+  //   },
+  //   outFields: ["*"],
+  //   visible: false,
+  // });
 
   const EmojiLayerConstructor = GetEmojiLayerConstructor(
     BaseLayerView2D,
-    GraphicsLayer
+    FeatureLayer
   );
 
   const map = new Map({
     basemap: "gray-vector",
-    layers: [featureLayer],
+    // layers: [featureLayer],
   });
 
   const viewOptions = {
@@ -74,23 +76,39 @@ const createMap = async (element) => {
 
   const view = new MapView(viewOptions);
   view.when(() => {
-    featureLayer.when(() => {
-      const query = featureLayer.createQuery();
-      featureLayer.queryFeatures(query).then((results) => {
-        const emojiLayer = new EmojiLayerConstructor({
-          attribute,
-          attributePrefix,
-          graphics: results.features,
-        });
-        map.add(emojiLayer);
-        const multiPoint = new Multipoint({
-          points: results.features.map((feature) => {
-            return [feature.geometry.longitude, feature.geometry.latitude];
-          }),
-        });
-        view.extent = multiPoint.extent.expand(1.5);
-      });
+    var item = new PortalItem({
+      id: layerPortalId
     });
+    item.load().then((portalItemInfo) => {
+      console.log('portalItemInfo', portalItemInfo.url);
+
+      const customLayer = new EmojiLayerConstructor({
+        url: portalItemInfo.url + "/0",
+        outFields: ["*"],
+      });
+  
+      console.log('customLayer', customLayer);
+      map.add(customLayer);
+    });
+
+
+    // featureLayer.when(() => {
+    //   const query = featureLayer.createQuery();
+    //   featureLayer.queryFeatures(query).then((results) => {
+    //     const emojiLayer = new EmojiLayerConstructor({
+    //       attribute,
+    //       attributePrefix,
+    //       graphics: results.features,
+    //     });
+    //     map.add(emojiLayer);
+    //     const multiPoint = new Multipoint({
+    //       points: results.features.map((feature) => {
+    //         return [feature.geometry.longitude, feature.geometry.latitude];
+    //       }),
+    //     });
+    //     view.extent = multiPoint.extent.expand(1.5);
+    //   });
+    // });
   });
 };
 
