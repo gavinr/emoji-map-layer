@@ -4,25 +4,27 @@ Show emoji on your ArcGIS map.
 
 ## How to Use
 
-1. Create a hosted feature service on ArcGIS Online
+1. Create a Hosted Feature Service on ArcGIS Online
 2. Create an attribute column to store the emoji names.
 3. Fill in the attribute column with emoji labels from [here](https://unicodey.com/emoji-data/table.htm). Use the "colon" version - you don't have to include the colons though. For example:
    1. [TODO - example image]
-4. Load this url, replacing the ID of your Feature Layer and the attribute column name:
+4. Create a web map that contains the Hosted Feature Service.
+5. Load this url, replacing the ID of your web map and the attribute column name:
    ```
-   https://gavinr.github.io/emoji-map-layer/?layer=YYYYYYYYYYYYYYYYYYYYYYYYYYYY&attribute=ZZZZZ
+   https://gavinr.github.io/emoji-map-layer/?webmap=YYYYYYYYYYYYYYYYYYYYYYYYYYYY&attribute=ZZZZZ
    ```
 
 ## URL Parameters
 
-- `layer` - ID of a Feature Layer from ArcGIS Online
-- `attribute` - attribute column of where to look for the emoji name
-- `attribute_prefix` - string that will be prepended to each attribute, main usage is `flag-`
+- `webmap` - ID of the web map to use.
+- `layer` - (optional) ID of a Feature Layer within the webmap. *Default*: will arbitrarily choose the first FeatureLayer it finds.
+- `attribute` - (optional) attribute column of where to look for the emoji name. *Default*: `emoji`
+- `attribute_prefix` - (optional) string that will be prepended to each attribute, main usage is `flag-`. *Default*: `[nothing]`
 
 ## Examples
 
-- https://gavinr.github.io/emoji-map-layer/?layer=782028ffbbfc47799f80e738f81c568d&attribute=ISO&attribute_prefix=flag-
-- https://gavinr.github.io/emoji-map-layer/?layer=710323311863451b9aece9722f8c0ac0&attribute=emoji
+- https://gavinr.github.io/emoji-map-layer/?webmap=4c310d1dcb1340bca7230e077c630ac2&attribute=ISO&attribute_prefix=flag-
+- https://gavinr.github.io/emoji-map-layer/?webmap=745ce18cfc0549b6a01be05cb9634a83&layer=172e920e3cd-layer-0
 
 ## Resources
 

@@ -1,30 +1,20 @@
 import { loadModules } from "https://unpkg.com/esri-loader/dist/esm/esri-loader.js";
-import GetEmojiLayerConstructor from "./EmojiLayer.js";
+import EmojiCreateLayerView from "./EmojiLayer.js";
+
+const emojiConverter = new EmojiConvertor();
+emojiConverter.replace_mode = "unified";
+emojiConverter.allow_native = true;
 
 const createMap = async (element) => {
   var childElement = document.createElement("div");
   element.appendChild(childElement);
   // More info on esri-loader's loadModules function:
   // https://github.com/Esri/esri-loader#loading-modules-from-the-arcgis-api-for-javascript
-  const [
-    Map,
-    MapView,
-    FeatureLayer,
-    BaseLayerView2D,
-    GraphicsLayer,
-    Graphic,
-    webMercatorUtils,
-    Multipoint,
-  ] = await loadModules(
+  const [WebMap, MapView, BaseLayerView2D] = await loadModules(
     [
-      "esri/Map",
+      "esri/WebMap",
       "esri/views/MapView",
-      "esri/layers/FeatureLayer",
       "esri/views/2d/layers/BaseLayerView2D",
-      "esri/layers/GraphicsLayer",
-      "esri/Graphic",
-      "esri/geometry/support/webMercatorUtils",
-      "esri/geometry/Multipoint",
     ],
     {
       css: true,
@@ -32,13 +22,15 @@ const createMap = async (element) => {
   );
 
   const urlParams = new URLSearchParams(window.location.search);
-  let layerPortalId = urlParams.get("layer");
+  let webmapId = urlParams.get("webmap");
+  let layerId = urlParams.get("layer");
   let attribute = urlParams.get("attribute");
   let attributePrefix = urlParams.get("attribute_prefix");
 
-  if (!layerPortalId) {
-    layerPortalId = "710323311863451b9aece9722f8c0ac0"; // default
+  if (!webmapId) {
+    webmapId = "745ce18cfc0549b6a01be05cb9634a83"; // default
   }
+
   if (!attribute) {
     attribute = "emoji"; // default
   }
@@ -46,52 +38,51 @@ const createMap = async (element) => {
     attributePrefix = ""; // default
   }
 
-  const featureLayer = new FeatureLayer({
+  const webmap = new WebMap({
     portalItem: {
-      // autocasts as new PortalItem()
-      id: layerPortalId,
+      id: webmapId,
     },
-    outFields: ["*"],
-    visible: false,
   });
 
-  const EmojiLayerConstructor = GetEmojiLayerConstructor(
+  await webmap.loadAll();
+
+  if (!layerId) {
+    // arbitrarily choose the first featureLayer as default
+    layerId = webmap.allLayers.find((layer) => {
+      return layer.type === "feature";
+    }).id;
+  }
+
+  const layer = webmap.allLayers.find((layer) => {
+    return layer.id === layerId;
+  });
+
+  if (!layer) {
+    console.error(
+      "Could not find that layer. Try one of these? -> " +
+        webmap.allLayers
+          .map((layer) => {
+            return layer.id;
+          })
+          .toArray()
+          .join(", ")
+    );
+  }
+
+  // "EmojiCreateLayerView" returns a function that returns an instance
+  // of our CustomLayerView2D
+  layer.createLayerView = EmojiCreateLayerView(
     BaseLayerView2D,
-    GraphicsLayer
+    attribute,
+    attributePrefix
   );
-
-  const map = new Map({
-    basemap: "gray-vector",
-    layers: [featureLayer],
-  });
 
   const viewOptions = {
     container: childElement,
-    map: map,
-    center: [0, 0],
-    zoom: 2,
+    map: webmap,
   };
 
-  const view = new MapView(viewOptions);
-  view.when(() => {
-    featureLayer.when(() => {
-      const query = featureLayer.createQuery();
-      featureLayer.queryFeatures(query).then((results) => {
-        const emojiLayer = new EmojiLayerConstructor({
-          attribute,
-          attributePrefix,
-          graphics: results.features,
-        });
-        map.add(emojiLayer);
-        const multiPoint = new Multipoint({
-          points: results.features.map((feature) => {
-            return [feature.geometry.longitude, feature.geometry.latitude];
-          }),
-        });
-        view.extent = multiPoint.extent.expand(1.5);
-      });
-    });
-  });
+  new MapView(viewOptions);
 };
 
 window.addEventListener(
