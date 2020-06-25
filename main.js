@@ -1,5 +1,5 @@
 import { loadModules } from "https://unpkg.com/esri-loader/dist/esm/esri-loader.js";
-// import { customLayerView } from "./EmojiLayer.js";
+import EmojiCreateLayerView from "./EmojiLayer.js";
 
 const emojiConverter = new EmojiConvertor();
 emojiConverter.replace_mode = "unified";
@@ -30,9 +30,7 @@ const createMap = async (element) => {
   if (!webmapId) {
     webmapId = "745ce18cfc0549b6a01be05cb9634a83"; // default
   }
-  if (!layerId) {
-    layerId = "710323311863451b9aece9722f8c0ac0"; // default
-  }
+
   if (!attribute) {
     attribute = "emoji"; // default
   }
@@ -48,72 +46,43 @@ const createMap = async (element) => {
 
   await webmap.loadAll();
 
+  if (!layerId) {
+    // arbitrarily choose the first featureLayer as default
+    layerId = webmap.allLayers.find((layer) => {
+      return layer.type === "feature";
+    }).id;
+  }
+
   const layer = webmap.allLayers.find((layer) => {
     return layer.id === layerId;
   });
 
-  const CustomLayerView2D = BaseLayerView2D.createSubclass({
-    attach: function () {
-      // this.layer.load();
-      var query = this.layer.createQuery();
-      query.outSpatialReference = "102100";
+  if (!layer) {
+    console.error(
+      "Could not find that layer. Try one of these? -> " +
+        webmap.allLayers
+          .map((layer) => {
+            return layer.id;
+          })
+          .toArray()
+          .join(", ")
+    );
+  }
 
-      // should I be doing this???? ->
-      this.layer.queryFeatures(query).then((res) => {
-        this.graphics = res.features;
-      });
-    },
-    render: function (renderParameters) {
-      // state is a ViewState instance
-      // https://developers.arcgis.com/javascript/latest/api-reference/esri-views-2d-ViewState.html
-      const state = renderParameters.state;
-
-      // ctx is sometimes the convention for canvas 2d rendering context
-      const ctx = renderParameters.context;
-      // const canvas = ctx.canvas;
-
-      if (this.graphics) {
-        this.graphics.forEach((graphic) => {
-          const mapCoords = [graphic.geometry.x, graphic.geometry.y];
-          // screenCoords array is modified in-place by state.toScreen()
-          const screenCoords = [0, 0];
-          state.toScreen(screenCoords, mapCoords[0], mapCoords[1]);
-
-          ctx.font = "40px serif";
-          // use these alignment properties for "better" positioning
-          ctx.textAlign = "center";
-
-          if (graphic.attributes.hasOwnProperty(attribute)) {
-            const replaceStr = `:${attributePrefix}${graphic.attributes[
-              attribute
-            ].toLowerCase()}:`;
-
-            ctx.fillText(
-              emojiConverter.replace_colons(replaceStr),
-              screenCoords[0],
-              screenCoords[1]
-            );
-          } else {
-            ctx.fillText("😂", screenCoords[0], screenCoords[1]);
-          }
-        });
-      }
-    },
-  });
-
-  layer.createLayerView = function (view) {
-    return new CustomLayerView2D({
-      view: view,
-      layer: this,
-    });
-  };
+  // "EmojiCreateLayerView" returns a function that returns an instance
+  // of our CustomLayerView2D
+  layer.createLayerView = EmojiCreateLayerView(
+    BaseLayerView2D,
+    attribute,
+    attributePrefix
+  );
 
   const viewOptions = {
     container: childElement,
     map: webmap,
   };
 
-  const view = new MapView(viewOptions);
+  new MapView(viewOptions);
 };
 
 window.addEventListener(
