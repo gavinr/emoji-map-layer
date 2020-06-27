@@ -10,18 +10,10 @@ const createMap = async (element) => {
   element.appendChild(childElement);
   // More info on esri-loader's loadModules function:
   // https://github.com/Esri/esri-loader#loading-modules-from-the-arcgis-api-for-javascript
-  const [
-    WebMap,
-    WebScene,
-    MapView,
-    SceneView,
-    BaseLayerView2D,
-  ] = await loadModules(
+  const [WebMap, MapView, BaseLayerView2D] = await loadModules(
     [
       "esri/WebMap",
-      "esri/WebScene",
       "esri/views/MapView",
-      "esri/views/SceneView",
       "esri/views/2d/layers/BaseLayerView2D",
     ],
     {
@@ -31,12 +23,11 @@ const createMap = async (element) => {
 
   const urlParams = new URLSearchParams(window.location.search);
   let webmapId = urlParams.get("webmap");
-  let sceneId = urlParams.get("scene");
   let layerId = urlParams.get("layer");
   let attribute = urlParams.get("attribute");
   let attributePrefix = urlParams.get("attribute_prefix");
 
-  if (!webmapId && !sceneId) {
+  if (!webmapId) {
     webmapId = "745ce18cfc0549b6a01be05cb9634a83"; // default
   }
 
@@ -47,38 +38,29 @@ const createMap = async (element) => {
     attributePrefix = ""; // default
   }
 
-  let map;
-  if (webmapId) {
-    map = new WebMap({
-      portalItem: {
-        id: webmapId,
-      },
-    });
-  } else if (sceneId) {
-    map = new WebScene({
-      portalItem: {
-        id: sceneId,
-      },
-    });
-  }
+  const webmap = new WebMap({
+    portalItem: {
+      id: webmapId,
+    },
+  });
 
-  await map.loadAll();
+  await webmap.loadAll();
 
   if (!layerId) {
     // arbitrarily choose the first featureLayer as default
-    layerId = map.allLayers.find((layer) => {
+    layerId = webmap.allLayers.find((layer) => {
       return layer.type === "feature";
     }).id;
   }
 
-  const layer = map.allLayers.find((layer) => {
+  const layer = webmap.allLayers.find((layer) => {
     return layer.id === layerId;
   });
 
   if (!layer) {
     console.error(
       "Could not find that layer. Try one of these? -> " +
-        map.allLayers
+        webmap.allLayers
           .map((layer) => {
             return layer.id;
           })
@@ -97,14 +79,10 @@ const createMap = async (element) => {
 
   const viewOptions = {
     container: childElement,
-    map: map,
+    map: webmap,
   };
 
-  if (map.portalItem.type === "Web Scene") {
-    new SceneView(viewOptions);
-  } else {
-    new MapView(viewOptions);
-  }
+  new MapView(viewOptions);
 };
 
 window.addEventListener(
