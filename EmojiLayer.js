@@ -1,4 +1,4 @@
-import EmojiLookup from "/compact.js";
+import EmojiLookup from "./compact.js";
 const DEFAULT_EMOJI = "😂";
 
 export default function EmojiLayer(

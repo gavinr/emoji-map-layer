@@ -1,5 +1,5 @@
 import { loadModules } from "https://unpkg.com/esri-loader/dist/esm/esri-loader.js";
-import EmojiCreateLayerView from "/EmojiLayer.js";
+import EmojiCreateLayerView from "../EmojiLayer.js";
 import { Picker } from "https://cdn.jsdelivr.net/npm/emoji-picker-element@1.0.3/index.min.js";
 
 let currentEmoji = false;
