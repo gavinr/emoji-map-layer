@@ -1,3 +1,6 @@
+import EmojiLookup from "/compact.js";
+const DEFAULT_EMOJI = "😂";
+
 export default function EmojiLayer(
   BaseLayerView2D,
   attribute,
@@ -42,17 +45,27 @@ export default function EmojiLayer(
           ctx.textAlign = "center";
 
           if (graphic.attributes.hasOwnProperty(this.view.attribute)) {
-            const replaceStr = `:${
+            const replaceStr = `${
               this.view.attributePrefix
-            }${graphic.attributes[this.view.attribute].toLowerCase()}:`;
+            }${graphic.attributes[this.view.attribute].toLowerCase()}`;
+
+            // TODO: Make this more efficient by creating a MAP first
+            const matchingEmojiInfo = EmojiLookup.find((emojiInfo) => {
+              return emojiInfo.shortcodes.indexOf(replaceStr) > -1;
+            });
+
+            let emoji = DEFAULT_EMOJI;
+            if(matchingEmojiInfo) {
+              emoji = matchingEmojiInfo.unicode;
+            }
 
             ctx.fillText(
-              this.view.emoji.replace_colons(replaceStr),
+              emoji, // this.view.emoji.replace_colons(replaceStr),
               screenCoords[0],
               screenCoords[1]
             );
           } else {
-            ctx.fillText("😂", screenCoords[0], screenCoords[1]);
+            ctx.fillText(DEFAULT_EMOJI, screenCoords[0], screenCoords[1]);
           }
         });
       }
@@ -60,10 +73,6 @@ export default function EmojiLayer(
   });
 
   return function (view) {
-    view.emoji = new EmojiConvertor();
-    view.emoji.replace_mode = "unified";
-    view.emoji.allow_native = true;
-
     if (attribute) {
       view.attribute = attribute;
     } else {
